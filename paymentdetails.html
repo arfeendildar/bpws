@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Blood Donation - Activism & Campaign HTML5 Template">
+  <meta name="author" content="xenioushk">
+  <link rel="shortcut icon" href="images/favicon.png" />
+
+        <!-- The styles -->
+        <link rel="stylesheet" href="css/bootstrap.min.css" />
+        <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css" >
+        <link href="css/animate.css" rel="stylesheet" type="text/css" >
+        <link href="css/owl.carousel.css" rel="stylesheet" type="text/css" >
+        <link href="css/venobox.css" rel="stylesheet" type="text/css" >
+        <link rel="stylesheet" href="css/styles.css" />
+
+
+  <link rel="stylesheet" href="csss/globaldesign.css" />
+  <link rel="stylesheet" href="csss/indexdesign.css" />
+  <link rel="stylesheet" href="csss/indesign.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" />
+  <style>
+    .image-block {
+      width: 150px; /* Set the width */
+      height: auto; /* Maintain aspect ratio */
+    }
+    .image-block img {
+      width: 100%; /* Ensure the image fills the container */
+      height: auto; /* Maintain aspect ratio */
+    }
+  </style>
+</head>
+<body>
+<div class="splash-screen">
+   <center> <a href="index.html" style="font-size: 40px; color: black; text-decoration: none; display: block; margin: 0 auto;">Back</a> <!-- Back button -->
+  </center>  <img class="splash-menu" alt="" src="./public/menu.png" />
+  <div class="splash-screen-item"></div>
+  <img class="vector-icon1" alt="" src="./public/vector.svg" />
+  <img class="vector-icon2" alt="" src="./public/vector.svg" />
+  <div class="group-div">
+    <div class="rectangle-container">
+      <div class="group-child1"></div>
+      <button class="group-button" autofocus="{true}">
+        <div class="group-child2"></div>
+        <img class="magnifier-24-outline" alt="" src="./public/magnifier--24--outline.svg" />
+      </button>
+      <input class="search" placeholder="Search" type="text" />
+    </div>
+  </div>
+  <!-- No results found message -->
+  <div id="noResults" style="display: none;">No results found</div>
+  <br /><br /><br /><br />
+  <div id="imageContainer" class="container"></div>
+</div>
+
+<script src="./js/script.js"></script>
+<script src="./js/search.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-storage.js"></script>
+<script>
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAiyJSwMZD9MkN-x8O3RdTkkZbNEPcnSek",
+    authDomain: "imgupload-3a8bc.firebaseapp.com",
+    projectId: "imgupload-3a8bc",
+    storageBucket: "imgupload-3a8bc.appspot.com",
+    messagingSenderId: "508108537118",
+    appId: "1:508108537118:web:a3de5d02c4448650049d0f",
+  };
+  firebase.initializeApp(firebaseConfig);
+  // Get a reference to the storage service
+  const storage = firebase.storage();
+  const storageRef = storage.ref('payment_images'); // Reference to the payment_images folder
+
+  // Function to fetch image data and display
+  function fetchAndDisplayImages() {
+    const imageContainer = document.getElementById("imageContainer");
+
+    // List all images in the payment_images folder
+    storageRef.listAll().then((res) => {
+      res.items.forEach((itemRef) => {
+        // Get image name
+        const imageName = itemRef.name;
+
+        // Extract the part of the image name before any symbol or space
+        const extractedName = imageName.match(/^\w+/)[0]; // Extracts alphanumeric characters at the beginning
+
+        // Get image URL
+        itemRef.getDownloadURL().then((url) => {
+          // Create image element
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = extractedName;
+
+          // Create paragraph for image name
+          const pName = document.createElement("p");
+          pName.classList.add("image-name");
+          pName.textContent = extractedName;
+
+          // Create anchor element for image link
+          const a = document.createElement("a");
+          a.href = `mehndi.html?imageName=${encodeURIComponent(imageName)}`; // Pass image name as query parameter
+          a.classList.add("cardss");
+
+          // Create div for image block
+          const imageBlock = document.createElement("div");
+          imageBlock.classList.add("image-block");
+
+          // Append image and name to image block
+          imageBlock.appendChild(img);
+          imageBlock.appendChild(pName);
+
+          // Append image block to anchor element
+          a.appendChild(imageBlock);
+
+          // Create block for image container
+          const block = document.createElement("div");
+          block.classList.add("block");
+
+          // Append anchor element to block
+          block.appendChild(a);
+
+          // Append block to image container
+          imageContainer.appendChild(block);
+        });
+      });
+    }).catch((error) => {
+      console.error("Error listing images:", error);
+    });
+  }
+
+  // Call the function to fetch and display images when the page loads
+  window.addEventListener("load", fetchAndDisplayImages);
+</script>
+</body>
+</html>

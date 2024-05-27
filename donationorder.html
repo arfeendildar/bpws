@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>DONATION DETAILS</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css">
+  <link href="css/fresh-bootstrap-table.css" rel="stylesheet" />
+  <link href="css/demo.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link href="http://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet" type="text/css">
+  <style>
+    body {
+      background-color: #434561;
+    }
+    .back-button {
+      display: inline-block;
+      background-color: #e8e8e8;
+      border: none;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="logo-container full-screen-table-demo">
+    <div class="toolbar">
+      <button class="btn btn-primary btn-back" style="background-color:#434561; border:white;">Back</button>
+    </div>
+  </div>
+  <div class="fresh-table full-color-orange full-screen-table">
+    <table id="fresh-table" class="table">
+      <thead>
+        <th data-field="name">Name</th>
+        <th data-field="phone">Phone Number</th>
+        <th data-field="email">Email</th>
+        <th data-field="donationAmount">Donation Amount</th>
+        <th data-field="donationFrequency">Donation Frequency</th>
+        <th data-field="bankName">Bank Name</th>
+        <th data-field="bankAccount">Bank Account</th>
+        <th data-field="receiptid">Receipt ID</th>
+        <th data-field="address">Address</th>
+        <th data-field="comments">Comments</th>
+        <th data-field="socialMediaPermission">Social Media Permission</th>
+        <th data-field="operate" data-formatter="operateFormatter">Actions</th> <!-- Added column for actions -->
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="https://unpkg.com/bootstrap-table/dist/bootstrap-table.js"></script>
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<!-- Firebase libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+<script>
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1Bzbz9jaAvBSXPLWEji5Jw3GMqNhsZeo",
+    authDomain: "forms-bpws.firebaseapp.com",
+    projectId: "forms-bpws",
+    storageBucket: "forms-bpws.appspot.com",
+    messagingSenderId: "647810187401",
+    appId: "1:647810187401:web:01b6923dd9921b9c9dc658"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  // Reference to the database
+  const primaryDatabase = firebase.database();
+
+  // Function to load data into the table
+  function loadData() {
+    const ordersRef = primaryDatabase.ref('moneydonation');
+    ordersRef.once('value', function(snapshot) {
+      const data = snapshot.val();
+      if (data) {
+        const tableBody = document.querySelector('#fresh-table tbody');
+        tableBody.innerHTML = ''; // Clear existing data
+        Object.keys(data).forEach(orderKey => {
+          const order = data[orderKey];
+          const row = document.createElement('tr');
+          const fields = [
+            'name', 'phone', 'email', 'donationAmount',
+            'donationFrequency', 'bankName', 'bankAccount', 'receiptid',
+            'address', 'comments', 'socialMediaPermission'
+          ];
+
+          fields.forEach(field => {
+            const cell = document.createElement('td');
+            const value = order[field] || "-"; // Display dash if value is falsy
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+
+          // Add action button to remove corresponding field
+          const actionCell = document.createElement('td');
+          const removeButton = document.createElement('button');
+          removeButton.textContent = 'Remove';
+          removeButton.classList.add('btn', 'btn-danger', 'btn-remove');
+          removeButton.dataset.orderKey = orderKey; // Store the order key in dataset
+          actionCell.appendChild(removeButton);
+          row.appendChild(actionCell);
+
+          tableBody.appendChild(row);
+        });
+      }
+    });
+  }
+
+  // Load data when the page is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+  });
+
+  // Add event listener to the back button
+  document.querySelector('.btn-back').addEventListener('click', function() {
+    window.history.back();
+  });
+</script>
+<script>
+  // Function to format actions column
+  function operateFormatter(value, row, index) {
+    return [
+      '<button class="btn btn-danger btn-remove" title="Remove" data-toggle="tooltip">',
+      '<i class="fa fa-trash"></i>',
+      '</button>'
+    ].join('');
+  }
+
+  // Handle Remove button click
+  $(document).on('click', '.btn-remove', function() {
+    var orderKey = $(this).data('orderKey');
+    if (orderKey) {
+      primaryDatabase.ref('moneydonation/' + orderKey).remove(function(error) {
+        if (error) {
+          console.log('Failed to remove the order:', error.message);
+        } else {
+          console.log('Order removed successfully');
+          loadData(); // Reload data after successful removal
+        }
+      });
+    } else {
+      console.log('Order key not found');
+    }
+  });
+</script>
+<script>
+  // Initialize bootstrap table
+  $(function() {
+    $('#fresh-table').bootstrapTable({
+      toolbar: ".toolbar",
+      showRefresh: false,
+      search: true,
+      showToggle: true,
+      showColumns: true,
+      pagination: true,
+      striped: true,
+      pageSize: 8,
+      pageList: [8, 10, 25, 50, 100],
+      formatShowingRows: function(pageFrom, pageTo, totalRows) {
+        return '';
+      },
+      formatRecordsPerPage: function(pageNumber) {
+        return pageNumber + ' rows visible';
+      },
+      columns: [
+        { field: 'name', title: 'Name' },
+        { field: 'phone', title: 'Phone Number' },
+        { field: 'email', title: 'Email' },
+        { field: 'donationAmount', title: 'Donation Amount' },
+        { field: 'donationFrequency', title: 'Donation Frequency' },
+        { field: 'bankName', title: 'Bank Name' },
+        { field: 'bankAccount', title: 'Bank Account' },
+        { field: 'receiptid', title: 'Receipt ID' },
+        { field: 'address', title: 'Address' },
+        { field: 'comments', title: 'Comments' },
+        { field: 'socialMediaPermission', title: 'Social Media Permission' }
+      ]
+    });
+  });
+  $(document).ready(function() {
+    var $table = $('#fresh-table');
+
+    function loadData() {
+      primaryDatabase.ref('moneydonation').once('value', function(snapshot) {
+        var data = snapshot.val();
+        if (data) {
+          $table.bootstrapTable('load', dataToArray(data));
+        } else {
+          $table.bootstrapTable('removeAll');
+        }
+      });
+    }
+
+    function dataToArray(data) {
+      var result = [];
+      Object.keys(data).forEach(function(key) {
+        var item = data[key];
+        result.push({
+          name: item.name,
+          phone: item.phone,
+          email: item.email,
+          donationAmount: item.donationAmount,
+          donationFrequency: item.donationFrequency,
+          bankName: item.bankName,
+          bankAccount: item.bankAccount,
+          receiptid: item.receiptid,
+          address: item.address,
+          comments: item.comments,
+          socialMediaPermission: item.socialMediaPermission
+        });
+      });
+      return result;
+    }
+
+    $table.bootstrapTable({
+      toolbar: ".toolbar",
+      showRefresh: false,
+      search: true,
+      showToggle: true,
+      showColumns: true,
+      pagination: true,
+      striped: true,
+      pageSize: 8,
+      pageList: [8, 10, 25, 50, 100],
+      formatShowingRows: function(pageFrom, pageTo, totalRows) {
+        return '';
+      },
+      columns: [
+        { field: 'name', title: 'Name' },
+        { field: 'phone', title: 'Phone Number' },
+        { field: 'email', title: 'Email' },
+        { field: 'donationAmount', title: 'Donation Amount' },
+        { field: 'donationFrequency', title: 'Donation Frequency' },
+        { field: 'bankName', title: 'Bank Name' },
+        { field: 'bankAccount', title: 'Bank Account' },
+        { field: 'receiptid', title: 'Receipt ID' },
+        { field: 'address', title: 'Address' },
+        { field: 'comments', title: 'Comments' },
+        { field: 'socialMediaPermission', title: 'Social Media Permission' }
+      ]
+    });
+
+    loadData();
+  });
+</script>
+<script></script>
+</body>
+</html>
